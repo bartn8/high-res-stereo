@@ -5,36 +5,39 @@ import torch.utils.data
 from torch.autograd import Variable
 import torch.nn.functional as F
 import math
-from .submodule import *
 import pdb
-from models.utils import unet
 from matplotlib import pyplot as plt
+import numpy as np
+
+import importlib
+hsm_submodule = importlib.import_module("thirdparty.high-res-stereo.models.submodule")
+hsm_utils = importlib.import_module("thirdparty.high-res-stereo.models.utils")
 
 class HSMNet(nn.Module):
     def __init__(self, maxdisp,clean,level=1):
         super(HSMNet, self).__init__()
         self.maxdisp = maxdisp
         self.clean = clean
-        self.feature_extraction = unet()
+        self.feature_extraction = hsm_utils.unet()
         self.level = level
             
     
         # block 4
-        self.decoder6 = decoderBlock(6,32,32,up=True, pool=True)
+        self.decoder6 = hsm_submodule.decoderBlock(6,32,32,up=True, pool=True)
         if self.level > 2:
-            self.decoder5 = decoderBlock(6,32,32,up=False, pool=True)
+            self.decoder5 = hsm_submodule.decoderBlock(6,32,32,up=False, pool=True)
         else:
-            self.decoder5 = decoderBlock(6,32,32,up=True, pool=True)
+            self.decoder5 = hsm_submodule.decoderBlock(6,32,32,up=True, pool=True)
             if self.level > 1:
-                self.decoder4 = decoderBlock(6,32,32, up=False)
+                self.decoder4 = hsm_submodule.decoderBlock(6,32,32, up=False)
             else:
-                self.decoder4 = decoderBlock(6,32,32, up=True)
-                self.decoder3 = decoderBlock(5,32,32, stride=(2,1,1),up=False, nstride=1)
+                self.decoder4 = hsm_submodule.decoderBlock(6,32,32, up=True)
+                self.decoder3 = hsm_submodule.decoderBlock(5,32,32, stride=(2,1,1),up=False, nstride=1)
         # reg
-        self.disp_reg8 = disparityregression(self.maxdisp,16)
-        self.disp_reg16 = disparityregression(self.maxdisp,16)
-        self.disp_reg32 = disparityregression(self.maxdisp,32)
-        self.disp_reg64 = disparityregression(self.maxdisp,64)
+        self.disp_reg8 = hsm_submodule.disparityregression(self.maxdisp,16)
+        self.disp_reg16 = hsm_submodule.disparityregression(self.maxdisp,16)
+        self.disp_reg32 = hsm_submodule.disparityregression(self.maxdisp,32)
+        self.disp_reg64 = hsm_submodule.disparityregression(self.maxdisp,64)
 
    
 
@@ -43,7 +46,7 @@ class HSMNet(nn.Module):
         diff feature volume
         '''
         width = refimg_fea.shape[-1]
-        cost = Variable(torch.cuda.FloatTensor(refimg_fea.size()[0], refimg_fea.size()[1], maxdisp,  refimg_fea.size()[2],  refimg_fea.size()[3]).fill_(0.))
+        cost = Variable(torch.FloatTensor(refimg_fea.size()[0], refimg_fea.size()[1], maxdisp,  refimg_fea.size()[2],  refimg_fea.size()[3]).fill_(0.))
         for i in range(min(maxdisp, width)):
             feata = refimg_fea[:,:,:,i:width]
             featb = targetimg_fea[:,:,:,:width-i]

@@ -38,13 +38,13 @@ class HSMBlock:
             return
 
         self.log(f"Building Model...")
-        self.model = hsm.hsm(self.max_disparity,self.clean,level=self.level)
+        self.model = hsm.HSMNet(self.max_disparity,self.clean,level=self.level)
         self.model = torch.nn.DataParallel(self.model)
 
     def load(self, model_path):
         # load the checkpoint file specified by model_path.loadckpt
         print("loading model {}".format(model_path))
-        pretrained_dict = torch.load(model_path)
+        pretrained_dict = torch.load(model_path, map_location=torch.device(self.device))
         pretrained_dict['state_dict'] =  {k:v for k,v in pretrained_dict['state_dict'].items() if 'disp' not in k}
         self.model.load_state_dict(pretrained_dict['state_dict'],strict=False)
 
@@ -100,7 +100,7 @@ class HSMBlock:
         top_pad   = max_h-h
         left_pad  = max_w-w
 
-        return torch.from_numpy(np.expand_dims(img, axis=0)).to(self.device), top_pad, left_pad
+        return torch.from_numpy(img).to(self.device), top_pad, left_pad
 
     def test(self, left_vpp, right_vpp):
         #Input conversion
