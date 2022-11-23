@@ -43,7 +43,7 @@ class HSMBlock:
 
     def load(self, model_path):
         # load the checkpoint file specified by model_path.loadckpt
-        print("loading model {}".format(model_path))
+        self.log("loading model {}".format(model_path))
         pretrained_dict = torch.load(model_path, map_location=torch.device(self.device))
         pretrained_dict['state_dict'] =  {k:v for k,v in pretrained_dict['state_dict'].items() if 'disp' not in k}
         self.model.load_state_dict(pretrained_dict['state_dict'],strict=False)
@@ -62,7 +62,7 @@ class HSMBlock:
         self.model.module.disp_reg16 = hsm_submodule.disparityregression(self.model.module.maxdisp,16)
         self.model.module.disp_reg32 = hsm_submodule.disparityregression(self.model.module.maxdisp,32)
         self.model.module.disp_reg64 = hsm_submodule.disparityregression(self.model.module.maxdisp,64)
-        print(self.model.module.maxdisp)
+        #print(self.model.module.maxdisp)
 
     def dispose(self):
         if not self.disposed:
