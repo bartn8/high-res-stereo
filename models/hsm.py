@@ -14,12 +14,13 @@ hsm_submodule = importlib.import_module("thirdparty.high-res-stereo.models.submo
 hsm_utils = importlib.import_module("thirdparty.high-res-stereo.models.utils")
 
 class HSMNet(nn.Module):
-    def __init__(self, maxdisp,clean,level=1):
+    def __init__(self, maxdisp,clean,level=1,device="cpu"):
         super(HSMNet, self).__init__()
         self.maxdisp = maxdisp
         self.clean = clean
         self.feature_extraction = hsm_utils.unet()
         self.level = level
+        self.device = device
             
     
         # block 4
@@ -46,7 +47,7 @@ class HSMNet(nn.Module):
         diff feature volume
         '''
         width = refimg_fea.shape[-1]
-        cost = Variable(torch.FloatTensor(refimg_fea.size()[0], refimg_fea.size()[1], maxdisp,  refimg_fea.size()[2],  refimg_fea.size()[3]).fill_(0.))
+        cost = Variable(torch.FloatTensor(refimg_fea.size()[0], refimg_fea.size()[1], maxdisp,  refimg_fea.size()[2],  refimg_fea.size()[3]).fill_(0.).to(self.device))
         for i in range(min(maxdisp, width)):
             feata = refimg_fea[:,:,:,i:width]
             featb = targetimg_fea[:,:,:,:width-i]

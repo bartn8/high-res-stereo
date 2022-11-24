@@ -40,6 +40,7 @@ class HSMBlock:
         self.log(f"Building Model...")
         self.model = hsm.HSMNet(self.max_disparity,self.clean,level=self.level)
         self.model = torch.nn.DataParallel(self.model)
+        self.model.to(self.device)
 
     def load(self, model_path):
         # load the checkpoint file specified by model_path.loadckpt
@@ -58,15 +59,16 @@ class HSMBlock:
         if self.model.module.maxdisp == 64: 
             self.model.module.maxdisp=128
 
-        self.model.module.disp_reg8 =  hsm_submodule.disparityregression(self.model.module.maxdisp,16)
-        self.model.module.disp_reg16 = hsm_submodule.disparityregression(self.model.module.maxdisp,16)
-        self.model.module.disp_reg32 = hsm_submodule.disparityregression(self.model.module.maxdisp,32)
-        self.model.module.disp_reg64 = hsm_submodule.disparityregression(self.model.module.maxdisp,64)
+        self.model.module.disp_reg8 =  hsm_submodule.disparityregression(self.model.module.maxdisp,16).to(self.device)
+        self.model.module.disp_reg16 = hsm_submodule.disparityregression(self.model.module.maxdisp,16).to(self.device)
+        self.model.module.disp_reg32 = hsm_submodule.disparityregression(self.model.module.maxdisp,32).to(self.device)
+        self.model.module.disp_reg64 = hsm_submodule.disparityregression(self.model.module.maxdisp,64).to(self.device)
         #print(self.model.module.maxdisp)
 
     def dispose(self):
         if not self.disposed:
             del self.model
+            torch.cuda.empty_cache()
             self.disposed = True
 
 
@@ -107,8 +109,8 @@ class HSMBlock:
         left_vpp, top_pad, left_pad = self._conv_image(left_vpp)
         right_vpp, _, _ = self._conv_image(right_vpp)
 
-        left_vpp = Variable(torch.FloatTensor(left_vpp))
-        right_vpp = Variable(torch.FloatTensor(right_vpp))
+        left_vpp = Variable(torch.FloatTensor(left_vpp).to(self.device))
+        right_vpp = Variable(torch.FloatTensor(right_vpp).to(self.device))
 
         self.model.eval()
         with torch.no_grad():
