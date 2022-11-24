@@ -38,9 +38,8 @@ class HSMBlock:
             return
 
         self.log(f"Building Model...")
-        self.model = hsm.HSMNet(self.max_disparity,self.clean,level=self.level)
-        self.model = torch.nn.DataParallel(self.model)
-        self.model.to(self.device)
+        self.model = hsm.HSMNet(self.max_disparity,self.clean,device=self.device,level=self.level)
+        self.model = torch.nn.DataParallel(self.model).to(self.device)
 
     def load(self, model_path):
         # load the checkpoint file specified by model_path.loadckpt
@@ -109,8 +108,8 @@ class HSMBlock:
         left_vpp, top_pad, left_pad = self._conv_image(left_vpp)
         right_vpp, _, _ = self._conv_image(right_vpp)
 
-        left_vpp = Variable(torch.FloatTensor(left_vpp).to(self.device))
-        right_vpp = Variable(torch.FloatTensor(right_vpp).to(self.device))
+        #left_vpp = Variable(torch.FloatTensor(left_vpp))
+        #right_vpp = Variable(torch.FloatTensor(right_vpp))
 
         self.model.eval()
         with torch.no_grad():
