@@ -2,9 +2,6 @@ import numpy as np
 import cv2
 import torch
 import math
-from torch.autograd import Variable
-
-import torchvision.transforms as transforms
 
 import importlib
 hsm = importlib.import_module("thirdparty.high-res-stereo.models.hsm")
