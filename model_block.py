@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import torch
 import math
+import gc
 
 import importlib
 hsm = importlib.import_module("thirdparty.high-res-stereo.models.hsm")
@@ -64,6 +65,7 @@ class HSMBlock:
     def dispose(self):
         if not self.disposed:
             del self.model
+            gc.collect()
             torch.cuda.empty_cache()
             self.disposed = True
 
